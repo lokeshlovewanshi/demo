@@ -8,6 +8,7 @@ on:
       - production
     paths:
       - "**/*"
+
 jobs:
   ios-build:
     runs-on: macos-latest
@@ -19,14 +20,13 @@ jobs:
         with:
           node-version: 18
 
-      - name: Clear npm cache and install dependencies
-        run: |
-          npm cache clean --force
-          rm -rf package-lock.json node_modules
-          npm install
+      - name: Remove existing lock file
+        run: rm -f package-lock.json
 
-      - name: Install Expo CLI
-        run: npm install -g expo-cli
+      - name: Install dependencies
+        run: |
+          npm install
+          npm install expo@latest react-native@latest
 
       - name: Generate iOS Project
         run: npx expo prebuild --platform ios --clean
@@ -38,7 +38,9 @@ jobs:
 
       - name: Install Pod Dependencies
         working-directory: ios
-        run: pod install
+        run: |
+          pod install
+          ls -la
 
       - name: Build iOS
         working-directory: ios
