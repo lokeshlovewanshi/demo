@@ -1,0 +1,50 @@
+name: Build and deploy iOS app
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - staging
+      - production
+    paths:
+      - "**/*"
+jobs:
+  ios-build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Clear npm cache and install dependencies
+        run: |
+          npm cache clean --force
+          rm -rf package-lock.json node_modules
+          npm install
+
+      - name: Install Expo CLI
+        run: npm install -g expo-cli
+
+      - name: Generate iOS Project
+        run: npx expo prebuild --platform ios --clean
+
+      - name: Install CocoaPods
+        run: |
+          brew install cocoapods
+          pod --version
+
+      - name: Install Pod Dependencies
+        working-directory: ios
+        run: pod install
+
+      - name: Build iOS
+        working-directory: ios
+        run: |
+          xcodebuild -workspace MyApp.xcworkspace \
+          -scheme MyApp \
+          -configuration Release \
+          -archivePath $PWD/build/MyApp.xcarchive \
+          archive

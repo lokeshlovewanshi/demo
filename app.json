@@ -12,14 +12,22 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "platforms": ["ios", "android"],
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.lovewanshi.test",
+      "buildNumber": "1.0.0",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access camera",
+        "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to access location"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.lovewanshi.test"
     },
     "web": {
       "favicon": "./assets/favicon.png"
