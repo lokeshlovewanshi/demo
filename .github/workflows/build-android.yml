@@ -1,0 +1,69 @@
+name: Build Android APK
+on:
+  pull_request:
+    branches:
+      - dev
+      - staging
+      - production
+    paths:
+      - "**/*"
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository code
+      - uses: actions/checkout@v4
+
+      # Setup Java 17
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      # Setup Node.js 21
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "21"
+
+      # Cache node modules
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # Install project dependencies
+      - name: Install Dependencies
+        run: npm ci
+
+      # Prebuild for Android
+      - name: Prebuild for Android
+        run: npx expo prebuild --clean --platform android
+
+      # Make gradlew executable
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      # Clean Gradle
+      - name: Clean Gradle
+        working-directory: android
+        run: ./gradlew clean
+
+      # Build Release APK
+      - name: Build Release APK
+        working-directory: android
+        run: ./gradlew assembleRelease
+
+      # Upload APK as artifact
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: android/app/build/outputs/apk/release/*.apk
+          retention-days: 5
