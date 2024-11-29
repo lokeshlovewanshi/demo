@@ -1,0 +1,47 @@
+name: Build Android APK
+on:
+  pull_request:
+    branches:
+      - dev
+      - staging
+      - production
+    paths:
+      - "**/*"
+
+jobs:
+  build-android:
+    runs-on: windows-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "lts" # Use the latest Node.js version
+
+      # Install dependencies
+      - name: Install Dependencies
+        run: npm install
+
+      # Clean gradle cache (optional)
+      - name: Clean Gradle Cache
+        run: |
+          cd android
+          gradlew clean
+
+      # Build APK
+      - name: Build APK
+        run: |
+          cd android
+          gradlew assembleRelease
+
+      # Upload the APK as an artifact
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release-apk
+          path: android/app/build/outputs/apk/release/app-release.apk

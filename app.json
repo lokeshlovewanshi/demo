@@ -19,10 +19,17 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.lovewanshi.test"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "ENV_NAME": "Root",
+      "eas": {
+        "projectId": "3b013bbd-07df-4559-9c82-6af2ab9f8abb"
+      }
     }
   }
 }
