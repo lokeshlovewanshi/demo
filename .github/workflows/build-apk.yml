@@ -1,40 +1,40 @@
-name: Build and deploy iOS app
-on:
-  pull_request:
-    branches:
-      - dev
-      - staging
-      - production
-    paths:
-      - "**/*"
-jobs:
-  build:
-    runs-on: macos-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-      - name: Install Homebrew and dependencies
-        run: |
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          brew install cocoapods
-      - name: Install project dependencies
-        run: npm ci
-      - name: Install Expo CLI
-        run: npm install -g expo-cli
-      - name: Generate iOS project
-        run: npx expo prebuild --clean
-      - name: Install CocoaPods dependencies
-        working-directory: ios
-        run: pod install
-      - name: Build iOS app
-        working-directory: ios
-        run: |
-          xcodebuild -workspace MyApp.xcworkspace \
-          -scheme MyApp \
-          -configuration Release \
-          -archivePath $PWD/build/MyApp.xcarchive \
-          archive
+# name: Build and deploy iOS app
+# on:
+#   pull_request:
+#     branches:
+#       - dev
+#       - staging
+#       - production
+#     paths:
+#       - "**/*"
+# jobs:
+#   build:
+#     runs-on: macos-latest
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v3
+#       - name: Set up Node.js
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: "18"
+#       - name: Install Homebrew and dependencies
+#         run: |
+#           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+#           brew install cocoapods
+#       - name: Install project dependencies
+#         run: npm ci
+#       - name: Install Expo CLI
+#         run: npm install -g expo-cli
+#       - name: Generate iOS project
+#         run: npx expo prebuild --clean
+#       - name: Install CocoaPods dependencies
+#         working-directory: ios
+#         run: pod install
+#       - name: Build iOS app
+#         working-directory: ios
+#         run: |
+#           xcodebuild -workspace MyApp.xcworkspace \
+#           -scheme MyApp \
+#           -configuration Release \
+#           -archivePath $PWD/build/MyApp.xcarchive \
+#           archive
