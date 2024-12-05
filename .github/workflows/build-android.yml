@@ -1,18 +1,17 @@
 name: Build Android APK
+
 on:
-  pull_request:
+  push:
     branches:
-      - dev
       - staging
       - production
-    paths:
-      - "**/*"
   workflow_dispatch:
     inputs:
-      build-type:
-        description: "Build Type (all/v8/v7/arm64/x86)"
+      branch:
+        description: "Specify the branch to build for (staging/production)"
         required: false
-        default: "all"
+        default: "staging"
+
 jobs:
   build-android:
     runs-on: ubuntu-latest
@@ -27,59 +26,48 @@ jobs:
           distribution: "temurin"
           java-version: "17"
 
-      # Set up Node.js 21
+      # Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "21"
 
-      # Cache node modules
-      # - name: Cache node modules
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: ~/.npm
-      #     key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-node-
-
-      # Install project dependencies
+      # Install Dependencies
       - name: Install Dependencies
         run: npm install
 
-      # Prebuild for Android
-      # - name: Prebuild for Android
-      #   run: npx expo prebuild --clean --platform android
-
-      # Create and Push New Branch for Android Folder
-      # - name: Push Android Folder to New Branch
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: |
-      #     git config --global user.name 'github-actions'
-      #     git config --global user.email 'github-actions@github.com'
-      #     git checkout -b update-android-folder/${{ github.run_id }}
-      #     git add android
-      #     git commit -m "Update Android project files" || echo "No changes to commit"
-      #     git push origin update-android-folder/${{ github.run_id }}
-
-      # Make gradlew executable
       - name: Make gradlew executable
         run: chmod +x android/gradlew
+
+      # Set build variant based on branch
+      - name: Set Build Variant
+        id: set-build-variant
+        run: |
+          if [[ "${{ github.ref_name }}" == "staging" ]]; then
+            echo "BUILD_VARIANT=assembleStaging" >> $GITHUB_ENV
+            echo "APK_OUTPUT_PATH=android/app/build/outputs/apk/staging/*.apk" >> $GITHUB_ENV
+          elif [[ "${{ github.ref_name }}" == "production" ]]; then
+            echo "BUILD_VARIANT=assembleRelease" >> $GITHUB_ENV
+            echo "APK_OUTPUT_PATH=android/app/build/outputs/apk/release/*.apk" >> $GITHUB_ENV
+          else
+            echo "Unsupported branch. Exiting..."
+            exit 1
+          fi
 
       # Clean Gradle
       - name: Clean Gradle
         working-directory: android
         run: ./gradlew clean
 
-      # Build Release APK
-      - name: Build Release APK
+      # Build APK
+      - name: Build APK
         working-directory: android
-        run: ./gradlew assembleRelease
+        run: ./gradlew ${{ env.BUILD_VARIANT }}
 
       # Upload APK as artifact
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: android/app/build/outputs/apk/release/*.apk
+          name: ${{ github.ref_name }}-apk
+          path: ${{ env.APK_OUTPUT_PATH }}
           retention-days: 5
