@@ -2,6 +2,8 @@ apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
+apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
+
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
 /**
@@ -110,6 +112,22 @@ android {
             keyPassword 'android'
         }
     }
+     // add this block
+    flavorDimensions "default"
+    productFlavors {
+        production {
+            minSdkVersion rootProject.ext.minSdkVersion
+            applicationIdSuffix ".prd"
+            targetSdkVersion rootProject.ext.targetSdkVersion
+        }
+        staging {
+            minSdkVersion rootProject.ext.minSdkVersion
+            applicationId "com.zenix.staging"
+            applicationIdSuffix ".staging"
+            targetSdkVersion rootProject.ext.targetSdkVersion
+        }
+    }
+
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
