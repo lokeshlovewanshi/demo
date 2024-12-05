@@ -15,6 +15,7 @@ on:
 jobs:
   build-android:
     runs-on: ubuntu-latest
+
     steps:
       # Checkout the repository code
       - uses: actions/checkout@v4
@@ -32,7 +33,16 @@ jobs:
         with:
           node-version: "21"
 
-      # Install Dependencies
+      # Cache node modules
+      # - name: Cache node modules
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ~/.npm
+      #     key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-node-
+
+      # Install project dependencies
       - name: Install Dependencies
         run: npm install
 
@@ -59,15 +69,30 @@ jobs:
         working-directory: android
         run: ./gradlew clean
 
+      # Determine Build Type
+      - name: Determine Build Type
+        id: build_type
+        run: |
+          if [[ "${{ github.ref_name }}" == "staging" || "${{ github.ref_name }}" == "dev" ]]; then
+            echo "BUILD_TYPE=assembleStaging" >> $GITHUB_ENV
+          elif [[ "${{ github.ref_name }}" == "production" ]]; then
+            echo "BUILD_TYPE=assembleRelease" >> $GITHUB_ENV
+          else
+            echo "Invalid branch for APK build."
+            exit 1
+          fi
+
       # Build APK
       - name: Build APK
         working-directory: android
-        run: ./gradlew ${{ env.BUILD_VARIANT }}
+        run: ./gradlew $BUILD_TYPE
 
       # Upload APK as artifact
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.ref_name }}-apk
-          path: ${{ env.APK_OUTPUT_PATH }}
+          path: |
+            android/app/build/outputs/apk/staging/*.apk
+            android/app/build/outputs/apk/release/*.apk
           retention-days: 5
