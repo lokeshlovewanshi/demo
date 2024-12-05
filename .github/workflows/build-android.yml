@@ -3,15 +3,14 @@ name: Build Android APK
 on:
   push:
     branches:
-      - dev
       - staging
       - production
   workflow_dispatch:
     inputs:
-      build-type:
-        description: "Build Type (stg/prd)"
+      branch:
+        description: "Specify the branch to build for (staging/production)"
         required: false
-        default: "stg"
+        default: "staging"
 
 jobs:
   build-android:
@@ -34,11 +33,36 @@ jobs:
         with:
           node-version: "21"
 
+      # Cache node modules
+      # - name: Cache node modules
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: ~/.npm
+      #     key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-node-
+
+      # Install project dependencies
       - name: Install Dependencies
         run: npm install
 
       - name: Make gradlew executable
         run: chmod +x android/gradlew
+
+      # Set build variant based on branch
+      - name: Set Build Variant
+        id: set-build-variant
+        run: |
+          if [[ "${{ github.ref_name }}" == "staging" ]]; then
+            echo "BUILD_VARIANT=assembleStaging" >> $GITHUB_ENV
+            echo "APK_OUTPUT_PATH=android/app/build/outputs/apk/staging/*.apk" >> $GITHUB_ENV
+          elif [[ "${{ github.ref_name }}" == "production" ]]; then
+            echo "BUILD_VARIANT=assembleRelease" >> $GITHUB_ENV
+            echo "APK_OUTPUT_PATH=android/app/build/outputs/apk/release/*.apk" >> $GITHUB_ENV
+          else
+            echo "Unsupported branch. Exiting..."
+            exit 1
+          fi
 
       # Clean Gradle
       - name: Clean Gradle
@@ -69,6 +93,6 @@ jobs:
         with:
           name: ${{ github.ref_name }}-apk
           path: |
-            android/app/build/outputs/apk/staging/*.apk
-            android/app/build/outputs/apk/release/*.apk
+            android/app/build/outputs/apk/staging/*
+            android/app/build/outputs/apk/release/*
           retention-days: 5
