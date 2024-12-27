@@ -2,6 +2,7 @@ name: Build Android APK
 on:
   pull_request:
     branches:
+      - run_git_action
       - dev
       - staging
       - production
@@ -47,20 +48,20 @@ jobs:
         run: npm install
 
       # Prebuild for Android
-      # - name: Prebuild for Android
-      #   run: npx expo prebuild --clean --platform android
+      - name: Prebuild for Android
+        run: npx expo prebuild --clean --platform android
 
       # Create and Push New Branch for Android Folder
-      # - name: Push Android Folder to New Branch
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: |
-      #     git config --global user.name 'github-actions'
-      #     git config --global user.email 'github-actions@github.com'
-      #     git checkout -b update-android-folder/${{ github.run_id }}
-      #     git add android
-      #     git commit -m "Update Android project files" || echo "No changes to commit"
-      #     git push origin update-android-folder/${{ github.run_id }}
+      - name: Push Android Folder to New Branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git checkout -b update-android-folder/${{ github.run_id }}
+          git add android
+          git commit -m "Update Android project files" || echo "No changes to commit"
+          git push origin update-android-folder/${{ github.run_id }}
 
       # Make gradlew executable
       - name: Make gradlew executable
