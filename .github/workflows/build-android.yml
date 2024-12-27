@@ -2,6 +2,7 @@ name: Build Android APK
 on:
   pull_request:
     branches:
+      - run_git_action
       - dev
       - staging
       - production
